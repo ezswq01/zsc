@@ -46,7 +46,7 @@ Route::name('admin.')->prefix('admin')->middleware('auth')->group(function () {
     Route::resource('roles', RoleController::class);
     Route::resource('permissions', PermissionController::class);
     Route::resource('absent_devices', AbsentDeviceController::class);
-    Route::resource('device_statuses', DeviceStatusController::class);
+    Route::resource('device_statuses', DeviceStatusController::class)->only(['index']);
 
     // Solo page
     Route::get('/status_types/{id}/history', [StatusTypeController::class, 'history'])->name('status_types.history');
@@ -56,7 +56,11 @@ Route::name('admin.')->prefix('admin')->middleware('auth')->group(function () {
     Route::put('/change-password', [AuthController::class, 'changePasswordStore']);
     Route::get('/logout', [AuthController::class, 'logoutPost'])->name('logout');
 
-    // Ajax routes
+    // Ajax and Export routes
+    Route::get('/device_statuses/ajax', [DeviceStatusController::class, 'ajax'])->name('device_statuses.ajax');
+    Route::get('/device-statuses/export', [DeviceStatusController::class, 'export'])->name('device_statuses.export');
+    Route::get('/device-logs/export', [DeviceLogController::class, 'export'])->name('device_logs.export');
+    
     Route::post('/devices/publish', [DeviceController::class, 'publish'])->name('devices.publish');
     Route::post('/devices/publish-streaming', [DeviceController::class, 'publishStreaming'])->name('devices.publish-streaming');
     Route::post('/devices/publish-streaming-stop', [DeviceController::class, 'publishStreamingStop'])->name('devices.publish-streaming-stop');
