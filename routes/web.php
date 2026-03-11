@@ -51,16 +51,22 @@ Route::name('admin.')->prefix('admin')->middleware('auth')->group(function () {
     // Solo page
     Route::get('/status_types/{id}/history', [StatusTypeController::class, 'history'])->name('status_types.history');
 
+    // History export — separate routes so all filtered data is streamed server-side (not DOM-page-limited)
+    Route::get('/status_types/{id}/history/export', [StatusTypeController::class, 'export'])->name('status_types.history.export');
+    Route::get('/status_types/{id}/history/export-excel', [StatusTypeController::class, 'exportExcel'])->name('status_types.history.export.excel');
+
+    // Ajax and Export routes
+    Route::get('/device_statuses/ajax', [DeviceStatusController::class, 'ajax'])->name('device_statuses.ajax');
+    Route::get('/device-statuses/export', [DeviceStatusController::class, 'export'])->name('device_statuses.export');
+    Route::get('/device-statuses/export-excel', [DeviceStatusController::class, 'exportExcel'])->name('device_statuses.export.excel');
+    Route::get('/device-logs/export', [DeviceLogController::class, 'export'])->name('device_logs.export');
+    Route::get('/device-logs/export-excel', [DeviceLogController::class, 'exportExcel'])->name('device_logs.export.excel');
+
     // Logout
     Route::get('/change-password', [AuthController::class, 'changePassword']);
     Route::put('/change-password', [AuthController::class, 'changePasswordStore']);
     Route::get('/logout', [AuthController::class, 'logoutPost'])->name('logout');
 
-    // Ajax and Export routes
-    Route::get('/device_statuses/ajax', [DeviceStatusController::class, 'ajax'])->name('device_statuses.ajax');
-    Route::get('/device-statuses/export', [DeviceStatusController::class, 'export'])->name('device_statuses.export');
-    Route::get('/device-logs/export', [DeviceLogController::class, 'export'])->name('device_logs.export');
-    
     Route::post('/devices/publish', [DeviceController::class, 'publish'])->name('devices.publish');
     Route::post('/devices/publish-streaming', [DeviceController::class, 'publishStreaming'])->name('devices.publish-streaming');
     Route::post('/devices/publish-streaming-stop', [DeviceController::class, 'publishStreamingStop'])->name('devices.publish-streaming-stop');
