@@ -9,7 +9,20 @@
                 </h4>
             </div>
         </div>
-        {{-- Breadcrumbs remain the same --}}
+
+        <div class="page-header-content d-lg-flex">
+            <div class="d-flex">
+                <div class="breadcrumb py-2">
+                    <a class="breadcrumb-item" href="/admin/dashboard"><i class="ph-house"></i></a>
+                    <a class="breadcrumb-item" href="#">Log and Report</a>
+                    <span class="breadcrumb-item active">All</span>
+                </div>
+                <a class="btn btn-light align-self-center collapsed d-lg-none border-transparent rounded-pill p-0 ms-auto"
+                    data-bs-toggle="collapse" href="#breadcrumb_elements">
+                    <i class="ph-caret-down collapsible-indicator ph-sm m-1"></i>
+                </a>
+            </div>
+        </div>
     </div>
 @endpush
 
@@ -62,40 +75,53 @@
             </thead>
         </table>
     </div>
+    <!-- /basic datatable -->
 @endsection
 
 @push('js')
-
     <script src="{{ asset('assets/js/vendor/tables/datatables/extensions/pdfmake/pdfmake.min.js') }}"></script>
     <script src="{{ asset('assets/js/vendor/tables/datatables/extensions/pdfmake/vfs_fonts.min.js') }}"></script>
     <script src="{{ asset('assets/js/vendor/tables/datatables/extensions/buttons.min.js') }}"></script>
 
     <script type="text/javascript">
         $(document).ready(function() {
-            const buttons = [{
-                text: 'Export CSV',
-                className: 'btn btn-light',
-                action: function () {
-                    let date = $('.datepicker-basic').val();
-                    let search = $('input[type=search]').val();
-                    let branch = $('#branch_filter').val();
-                    let building = $('#building_filter').val();
-                    let order = datatable.order()[0];
-                    let colIndex = order[0];
-                    let dir = order[1];
-                    let colName = datatable.settings().init().columns[colIndex].name;
 
-                    let url = '{{ route("admin.device_logs.export") }}'
-                        + '?date=' + encodeURIComponent(date)
-                        + '&search=' + encodeURIComponent(search)
-                        + '&branch=' + encodeURIComponent(branch)
-                        + '&building=' + encodeURIComponent(building)
-                        + '&sort=' + colName
-                        + '&dir=' + dir;
+            // Helper: build the export URL with all active filter state
+            function buildExportUrl(baseUrl) {
+                let date     = $('.datepicker-basic').val();
+                let search   = $('input[type=search]').val();
+                let branch   = $('#branch_filter').val();
+                let building = $('#building_filter').val();
+                let order    = datatable.order()[0];
+                let colIndex = order[0];
+                let dir      = order[1];
+                let colName  = datatable.settings().init().columns[colIndex].name;
 
-                    window.location.href = url;
+                return baseUrl
+                    + '?date='     + encodeURIComponent(date)
+                    + '&search='  + encodeURIComponent(search)
+                    + '&branch='  + encodeURIComponent(branch)
+                    + '&building='+ encodeURIComponent(building)
+                    + '&sort='    + encodeURIComponent(colName)
+                    + '&dir='     + encodeURIComponent(dir);
+            }
+
+            const buttons = [
+                {
+                    text: 'Export CSV',
+                    className: 'btn btn-light',
+                    action: function () {
+                        window.location.href = buildExportUrl('{{ route("admin.device_logs.export") }}');
+                    }
+                },
+                {
+                    text: 'Export Excel',
+                    className: 'btn btn-light',
+                    action: function () {
+                        window.location.href = buildExportUrl('{{ route("admin.device_logs.export.excel") }}');
+                    }
                 }
-            }];
+            ];
 
             const datatable = $('#datatable').DataTable({
                 processing: true,
@@ -103,8 +129,8 @@
                 ajax: {
                     url: '{!! route("admin.device_logs.index") !!}',
                     data: function (d) {
-                        d.date = $('.datepicker-basic').val();
-                        d.branch = $('#branch_filter').val();
+                        d.date     = $('.datepicker-basic').val();
+                        d.branch   = $('#branch_filter').val();
                         d.building = $('#building_filter').val();
                     }
                 },
@@ -115,28 +141,28 @@
                 pageLength: 10,
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                    { data: 'device_id', name: 'device.device_id' },
-                    { data: 'branch', name: 'device.branch' },
-                    { data: 'building', name: 'device.building' },
-                    { data: 'value', name: 'value' },
-                    { data: 'type', name: 'type' },
-                    { data: 'created_at', name: 'created_at' }
+                    { data: 'device_id',   name: 'device.device_id' },
+                    { data: 'branch',      name: 'device.branch' },
+                    { data: 'building',    name: 'device.building' },
+                    { data: 'value',       name: 'value' },
+                    { data: 'type',        name: 'type' },
+                    { data: 'created_at',  name: 'created_at' }
                 ],
-                order: [[6, 'desc']] // Order by the 'Time' column
+                order: [[6, 'desc']]
             });
 
             // --- Location Filter Logic ---
             $('#branch_filter').on('change', function() {
-                const selectedBranch = $(this).val();
-                const buildingFilter = $('#building_filter');
-                
+                const selectedBranch  = $(this).val();
+                const buildingFilter  = $('#building_filter');
+
                 buildingFilter.val('');
                 buildingFilter.find('option').not(':first').hide();
-                
+
                 if (selectedBranch) {
                     buildingFilter.find('option[data-branch="' + selectedBranch + '"]').show();
                 }
-                
+
                 datatable.draw();
             });
 
